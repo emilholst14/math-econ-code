@@ -1,6 +1,6 @@
 import numpy as np
 
-def amput_lsm(S0, K, T, r, sigma, d, N, M, av=False):
+def amput_lsm(S0, K, T, r, sigma, N, d, M, av=False):
     dt = T / d
     disc = np.exp(-r * dt)
 
@@ -15,17 +15,21 @@ def amput_lsm(S0, K, T, r, sigma, d, N, M, av=False):
     S = S0 * np.vstack([np.ones(N), S]).cumprod(axis=0)
 
     payoff = np.maximum(K - S, 0)
-    vals = np.zeros_like(payoff)
-    vals[-1, :] = payoff[-1, :]
+    vals = payoff[-1, :].copy()
     for t in range(d-1, 0, -1):
         itm = payoff[t, :] > 0
         if np.any(itm):
-            reg = np.polyfit(S[t, :], vals[t+1, :], M)
-            cont = np.polyval(reg, S[t, :])
-        else:
-            cont = np.zeros_like(vals[t+1, :])
-        vals[t, :] = np.where(payoff[t, :] > cont, payoff[t, :], vals[t+1, :])
+            X = S[t, itm]
+            Y = vals[itm] * disc
+            reg = np.polyfit(X, Y, M)
+            cont = np.polyval(reg, X)
 
-    V = vals[1, :] * disc 
+            exercise = payoff[t, itm] > cont
+            vals[itm] = np.where(exercise, payoff[t, itm], Y)
+
+    V = vals * disc 
     sd = np.std(V, ddof=1)/np.sqrt(N)
     return np.mean(V), sd, [np.mean(V) - 1.96*sd, np.mean(V) + 1.96*sd]
+
+# np.random.seed(123)
+# print(amput_lsm(100,100,1,0.05,0.2,100000,50,4,av=True))
