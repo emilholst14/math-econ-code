@@ -29,6 +29,8 @@ def amput_lsm(S0, K, T, r, sigma, N, d, M, av=False, cv=False):
             vals[itm] = np.where(exercise, payoff[t, itm], Y)
     
     V = vals * disc 
+
+    # EU option as control variate
     if cv:
         eu_lsm = np.maximum(K - S[-1], 0) * np.exp(-r * T)
         eu_bsm = bsm(S0, K, T, r, sigma, 'put')
