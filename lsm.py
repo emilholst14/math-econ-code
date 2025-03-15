@@ -1,5 +1,5 @@
 import numpy as np
-from bsm import bsm
+from bsm import BSM
 
 def amput_lsm(S0, K, T, r, sigma, N, d, M, av=False, cv=False):
     dt = T / d
@@ -33,7 +33,7 @@ def amput_lsm(S0, K, T, r, sigma, N, d, M, av=False, cv=False):
     # EU option as control variate
     if cv:
         eu_lsm = np.maximum(K - S[-1], 0) * np.exp(-r * T)
-        eu_bsm = bsm(S0, K, T, r, sigma, 'put')
+        eu_bsm = BSM(S0, K, T, r, sigma, 'put').price()
         beta = np.cov(V, eu_lsm)[0, 1] / np.var(eu_lsm)
         V = V - beta * (eu_lsm - eu_bsm) 
     sd = np.std(V, ddof=1)/np.sqrt(N)
